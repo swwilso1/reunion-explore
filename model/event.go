@@ -12,5 +12,6 @@ type EventDefinition struct {
 	Abbreviation3 string `json:"abbreviation3,omitempty"`
 	SentenceForm  string `json:"sentence_form,omitempty"`
 	Preposition   string `json:"preposition,omitempty"`
+	Color         string `json:"color,omitempty"` // #RRGGBBAA, for child-status definitions
 	RawFields     []RawField `json:"raw_fields,omitempty"`
 }

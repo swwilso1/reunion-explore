@@ -157,6 +157,13 @@ func TestOpen(t *testing.T) {
 		}
 	}
 
+	// Child-status definitions carry a color, not an abbreviation
+	for _, d := range ff.EventDefinitions {
+		if d.DisplayName == "Foster" && (d.Color != "#FFFF00FF" || d.Abbreviation != "") {
+			t.Errorf("Foster definition color=%q abbreviation=%q, want #FFFF00FF and none", d.Color, d.Abbreviation)
+		}
+	}
+
 	// Source fields are labeled from their schema definitions
 	var gotFields []string
 	for _, src := range ff.Sources {
