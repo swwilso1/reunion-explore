@@ -19,7 +19,13 @@ func ParseNote(rec RawRecord, ec *reunion.ErrorCollector) (*model.Note, error) {
 		data := rec.Data[8:]
 		text := extractNoteText(data)
 		n.RawText = text
-		if text != "" {
+		if notes.IsRTF(text) {
+			// Reunion 10 stores notes as RTF; there is no «» markup.
+			if plain := notes.RTFToText(text); plain != "" {
+				n.Markup = []model.MarkupNode{{Type: model.MarkupText, Text: plain}}
+				n.DisplayText = plain
+			}
+		} else if text != "" {
 			n.Markup = notes.ParseMarkup(text)
 			n.DisplayText = model.PlainText(n.Markup)
 		}
@@ -28,18 +34,32 @@ func ParseNote(rec RawRecord, ec *reunion.ErrorCollector) (*model.Note, error) {
 	return n, nil
 }
 
-// noteTextMarker precedes the note text: "talf" + u32 + u32, then the text.
-var noteTextMarker = []byte("talf")
+// noteTextMarkers precede the note text: marker + u32 + u32, then the text.
+// "talf" is used for Reunion 13/14 «» markup; "ntsa" for Reunion 10 RTF.
+var noteTextMarkers = [][]byte{[]byte("talf"), []byte("ntsa")}
+
+// rtfStart begins an RTF document.
+var rtfStart = []byte(`{\rtf`)
 
 // openTagBytes is the UTF-8 encoding of « (U+00AB).
 var openTagBytes = []byte{0xC2, 0xAB}
 
 func extractNoteText(data []byte) string {
-	// Skip past the "talf" marker and its 8-byte trailer when present.
-	// Reunion 13 stores a nonzero value after the marker, which would
-	// otherwise be mistaken for the start of the text.
-	if idx := bytes.Index(data[:min(len(data), 32)], noteTextMarker); idx >= 0 && idx+12 <= len(data) {
-		data = data[idx+12:]
+	// Skip past the text marker and its 8-byte trailer when present.
+	// The trailer may hold a nonzero value, which would otherwise be
+	// mistaken for the start of the text.
+	for _, marker := range noteTextMarkers {
+		if idx := bytes.Index(data[:min(len(data), 32)], marker); idx >= 0 && idx+12 <= len(data) {
+			data = data[idx+12:]
+			break
+		}
+	}
+
+	// RTF notes end at the brace closing the document; binary data follows.
+	if bytes.HasPrefix(data, rtfStart) {
+		if end := notes.RTFEnd(data); end > 0 {
+			return string(data[:end])
+		}
 	}
 
 	// Inline notes have a binary preamble followed by text content.
