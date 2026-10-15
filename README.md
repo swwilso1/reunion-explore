@@ -1,6 +1,6 @@
 # reunion-explore
 
-A CLI and web server for parsing and exploring [Reunion 14](https://www.leisterpro.com) genealogy bundles (`.familyfile14`). Reunion 13 bundles (`.familyfile13`) are also supported.
+A CLI and web server for parsing and exploring [Reunion 14](https://www.leisterpro.com) genealogy bundles (`.familyfile14`). Reunion 10 (`.familyfile10`) and Reunion 13 (`.familyfile13`) bundles are also supported, and any of them can be exported to GEDCOM.
 
 ## Install
 
@@ -34,6 +34,7 @@ All commands accept a `-j` / `--json` flag for JSON output.
 | `summary <bundle> <id>` | Per-person stats (spouses, ancestors, surnames) |
 | `places <bundle>` | List all places |
 | `events <bundle>` | List all event type definitions |
+| `gedcom <bundle>` | Export as GEDCOM 5.5.1 (`-o` for an output file, default stdout) |
 | `serve <bundle>` | Start web server (`-a` for listen address, default `:8080`) |
 
 ### Examples
@@ -47,6 +48,9 @@ reunion-explore search ~/Documents/MyFamily.familyfile14 "Smith"
 
 # View ancestors up to 5 generations
 reunion-explore ancestors ~/Documents/MyFamily.familyfile14 42 -g 5
+
+# Export to GEDCOM
+reunion-explore gedcom ~/Documents/MyFamily.familyfile14 -o MyFamily.ged
 
 # Start the web UI
 reunion-explore serve ~/Documents/MyFamily.familyfile14 -a :3000
@@ -67,6 +71,14 @@ Release tags follow plain semver (`vX.Y.Z`). The supported Reunion format versio
 Reunion 14 uses a proprietary, undocumented binary format. Leister Productions has never published a specification — a developer [noted on ReunionTalk](https://www.reuniontalk.com/forum/using-older-versions-of-reunion/9509-conflicted-file-from-dropbox) that *"viewing the contents of a Family File package was not something we intended users to do."* Everything below was reverse-engineered from the Reunion 14 demo's sample file and confirmed against the parser in this repo.
 
 A sample file ships with the Reunion 14 demo at `~/Documents/Reunion Files/Sample Family 14.familyfile14`.
+
+### GEDCOM Export
+
+`gedcom` writes GEDCOM 5.5.1 in UTF-8. Events use the GEDCOM tag from each Reunion event type (BIRT, DEAT, MARR, ...); event types without a standard tag are written as `EVEN`/`FACT` with a `TYPE`. Notes, sources (title, author, publisher, other fields as a note), source citations with page details, and picture file paths are included. Reunion-only data such as child-status colors and picture crop settings is not exported.
+
+### Reunion 10
+
+Reunion 10 bundles store the data file as `Family File.familyfile` and set the high bit (0x8000) on record type codes; otherwise records use the same format as later versions. Notes are stored as RTF (after an `ntsa` marker) and are converted to plain text, and pictures may be referenced by classic Mac alias records, from which the file path is extracted.
 
 ### Reunion 13
 
