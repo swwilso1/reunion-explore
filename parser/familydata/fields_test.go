@@ -301,3 +301,15 @@ func TestExtractSourceCitations(t *testing.T) {
 		t.Errorf("expected nil for zero count, got %v", got)
 	}
 }
+
+func TestParseTLVFields_DropsOverrunningField(t *testing.T) {
+	data := []byte{
+		0, 0, 0, 0, 0, 0, // preamble
+		0x06, 0x00, 0x1b, 0x00, 0x01, 0x00, // valid field: len 6, tag 0x1B
+		0x00, 0xfc, 0x09, 0x08, 0x3c, 0xa6, // junk claiming len 0xFC00
+	}
+	fields := ParseTLVFields(data)
+	if len(fields) != 1 || fields[0].Tag != 0x1b {
+		t.Errorf("ParseTLVFields() = %+v, want only tag 0x1B", fields)
+	}
+}

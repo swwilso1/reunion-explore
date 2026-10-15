@@ -55,14 +55,12 @@ func parseTLVFieldsFrom(data []byte) []TLVField {
 			break
 		}
 
+		// A field running past the end of the data is not a real field;
+		// Reunion 10 leaves uninitialized bytes after some records.
 		dataLen := int(totalLen) - 4
 		fieldEnd := pos + int(totalLen)
 		if fieldEnd > len(data) {
-			fieldEnd = len(data)
-			dataLen = fieldEnd - pos - 4
-			if dataLen < 0 {
-				break
-			}
+			break
 		}
 
 		fieldData := data[pos+4 : pos+4+dataLen]
