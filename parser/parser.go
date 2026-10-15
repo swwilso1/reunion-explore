@@ -1,4 +1,4 @@
-// Package parser provides the Reunion 13/14 parser implementation and orchestrator.
+// Package parser provides the Reunion 10/13/14 parser implementation and orchestrator.
 package parser
 
 import (
@@ -15,12 +15,13 @@ import (
 )
 
 func init() {
+	reunion.RegisterVersion(&Parser{version: reunion.Version10})
 	reunion.RegisterVersion(&Parser{version: reunion.Version13})
 	reunion.RegisterVersion(&Parser{version: reunion.Version14})
 }
 
-// Parser implements VersionParser for Reunion 13 and 14, which share the
-// same bundle layout and familydata record format.
+// Parser implements VersionParser for Reunion 10, 13 and 14, which share
+// the same familydata record format.
 type Parser struct {
 	version reunion.Version
 }
@@ -32,7 +33,7 @@ func (p *Parser) CanParse(bundlePath string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return b.FamilyData != "" && b.Signature != "", nil
+	return b.FamilyData != "", nil
 }
 
 func (p *Parser) Parse(bundlePath string, opts reunion.ParseOptions) (*model.FamilyFile, error) {

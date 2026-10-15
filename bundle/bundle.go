@@ -12,7 +12,7 @@ import (
 type Bundle struct {
 	Path       string
 	Signature  string // path to familyfile.signature
-	FamilyData string // path to familyfile.familydata
+	FamilyData string // path to familyfile.familydata (or a legacy *.familyfile)
 	Caches     map[string]string // cache name -> path
 	Members    []MemberDir
 	NoteFiles  []string // all .note file paths across all members
@@ -62,6 +62,10 @@ func OpenBundle(path string) (*Bundle, error) {
 
 	for _, entry := range entries {
 		name := entry.Name()
+		// Reunion 10 stores the data file as "Family File.familyfile".
+		if b.FamilyData == "" && !entry.IsDir() && strings.HasSuffix(name, ".familyfile") {
+			b.FamilyData = filepath.Join(path, name)
+		}
 		if strings.HasSuffix(name, ".cache") {
 			b.Caches[name] = filepath.Join(path, name)
 		}

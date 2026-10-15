@@ -19,6 +19,10 @@ const (
 	RecordTypeReport RecordType = 0x210C
 )
 
+// recordTypeFlag is set on most record type codes in Reunion 10 files
+// (e.g. 0xA0C4 for a person); the remaining bits match later versions.
+const recordTypeFlag = 0x8000
+
 // Marker is the 4-byte record marker found in familydata.
 var Marker = []byte{0x05, 0x03, 0x02, 0x01}
 
@@ -72,7 +76,7 @@ func ScanRecords(data []byte) []RawRecord {
 		// Read type code (2 bytes before marker)
 		if markerPos >= 2 {
 			tc, _ := binutil.U16LE(data, markerPos-2)
-			rec.Type = RecordType(tc)
+			rec.Type = RecordType(tc &^ recordTypeFlag)
 		}
 
 		// Read sequence number (4 bytes before marker)

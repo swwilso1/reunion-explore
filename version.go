@@ -10,6 +10,7 @@ import (
 type Version int
 
 const (
+	Version10 Version = 10
 	Version13 Version = 13
 	Version14 Version = 14
 )
