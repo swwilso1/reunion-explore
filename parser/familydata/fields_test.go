@@ -167,6 +167,16 @@ func TestExtractDate(t *testing.T) {
 			want: "Jun 2000",
 		},
 		{
+			name: "plain year: 1939",
+			data: buildDateData(0x00, 0, 0, 1939),
+			want: "1939",
+		},
+		{
+			name: "month 0 with a day is invalid",
+			data: buildDateData(0x00, 5, 0, 1939),
+			want: "",
+		},
+		{
 			name: "about year only: about 1850",
 			data: buildDateData(0xA0, 0, 1, 1850),
 			want: "about 1850",

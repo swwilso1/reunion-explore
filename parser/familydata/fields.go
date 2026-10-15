@@ -157,7 +157,11 @@ func ExtractDate(fieldData []byte) string {
 
 	day := int(dayByte & 0x3F)
 
-	if year < 1 || year > 9999 || month < 1 || month > 12 {
+	if year < 1 || year > 9999 || month > 12 {
+		return ""
+	}
+	// Month 0 with no day is a plain year (e.g. "1939").
+	if month == 0 && day != 0 {
 		return ""
 	}
 
@@ -179,7 +183,7 @@ func ExtractDate(fieldData []byte) string {
 		prefix = "about "
 	}
 
-	if yearOnly {
+	if yearOnly || month == 0 {
 		return fmt.Sprintf("%s%d", prefix, year)
 	}
 	if day > 0 && day <= 31 {
