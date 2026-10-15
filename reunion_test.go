@@ -123,6 +123,20 @@ func TestOpen(t *testing.T) {
 		t.Errorf("JFK birth citation sourceID = %d, want 6", birthEvt.SourceCitations[0].SourceID)
 	}
 
+	// Source fields are labeled from their schema definitions
+	var gotFields []string
+	for _, src := range ff.Sources {
+		if src.ID == 6 {
+			for _, f := range src.Fields {
+				gotFields = append(gotFields, f.Label+"="+f.Value)
+			}
+		}
+	}
+	wantFields := "Author=Doris Kearns Goodwin|Title=The Fitzgeralds and the Kennedys, An American Saga|Publisher=Simon and Schuster|Date=1987"
+	if strings.Join(gotFields, "|") != wantFields {
+		t.Errorf("Source 6 fields = %q, want %q", gotFields, wantFields)
+	}
+
 	// Source titles should be clean (using tag 0x0014)
 	for _, src := range ff.Sources {
 		for _, r := range src.Title {

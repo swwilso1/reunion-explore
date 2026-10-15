@@ -506,6 +506,16 @@
       <div x-show="view === 'source' && !loading && sourceDetail">
         <h2 x-text="sourceDetail?.title || '(untitled)'"></h2>
         <div class="detail-id" x-text="'Source #' + (sourceDetail?.id || '')"></div>
+        <div class="card" x-show="(sourceDetail?.fields || []).length > 0">
+          <h3>Fields</h3>
+          <table>
+            <tbody>
+              <template x-for="f in sourceDetail?.fields || []" :key="f.schema_id">
+                <tr><th x-text="f.label || ('Field ' + f.schema_id)"></th><td x-text="f.value"></td></tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
         <div class="card">
           <h3>Persons citing this source</h3>
           <ul class="person-list" x-show="sourcePersonsList.length > 0">

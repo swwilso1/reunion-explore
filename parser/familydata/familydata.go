@@ -114,5 +114,21 @@ func Parse(path string, ec *reunion.ErrorCollector) (*Result, error) {
 		}
 	}
 
+	labelSourceFields(result)
+
 	return result, nil
+}
+
+// labelSourceFields names each source field after its schema definition.
+func labelSourceFields(r *Result) {
+	names := make(map[uint32]string, len(r.EventDefinitions))
+	for _, d := range r.EventDefinitions {
+		names[d.ID] = d.DisplayName
+	}
+	for i := range r.Sources {
+		for j := range r.Sources[i].Fields {
+			fld := &r.Sources[i].Fields[j]
+			fld.Label = names[uint32(fld.SchemaID)]
+		}
+	}
 }
