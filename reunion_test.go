@@ -69,6 +69,14 @@ func TestOpen(t *testing.T) {
 		}
 	}
 
+	// Surname and search-name caches
+	if len(ff.Surnames) != 16 || ff.Surnames[2].Surname != "BOUVIER" {
+		t.Errorf("Surnames = %d entries (3rd %q), want 16 with BOUVIER third", len(ff.Surnames), ff.Surnames[min(2, len(ff.Surnames)-1)].Surname)
+	}
+	if len(ff.SearchNames) != 61 || ff.SearchNames[0].Name != "ANTHONY PAUL KENNEDY" {
+		t.Errorf("SearchNames = %d entries, want 61 starting with ANTHONY PAUL KENNEDY", len(ff.SearchNames))
+	}
+
 	// First names cache
 	if got := firstNames(ff); strings.Join(got, ",") != "Bouvier,Patrick" {
 		t.Errorf("FirstNames = %q, want [Bouvier Patrick]", got)

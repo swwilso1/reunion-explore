@@ -9,50 +9,30 @@ import (
 )
 
 // ParseShNames parses the shNames.cache file (searchable full names).
-// Format: size(4) + count(u16) + padding(2) + "10hSan"(6) + padding(6) = 20-byte header
-// Then: packed name records.
+// Format: size(4) + count(u32) + "10hSan"(6) + padding to offset 0x20,
+// then count records of length(u16, including itself) + name.
 func ParseShNames(path string) ([]model.SearchName, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading shNames.cache: %w", err)
 	}
 
-	if len(data) < 20 {
+	const recordsStart = 0x20
+	if len(data) < recordsStart {
 		return nil, fmt.Errorf("shNames.cache too short: %d bytes", len(data))
 	}
 
-	count, _ := binutil.U16LE(data, 4)
-
-	// Data starts after the header area. Look for name records.
-	// Names appear to be length-prefixed or null-terminated after the header.
-	var names []model.SearchName
-
-	// Skip the header (approximately 20 bytes)
-	pos := 20
-	for len(names) < int(count) && pos < len(data) {
-		// Try reading a null-terminated string
-		start := pos
-		for pos < len(data) && data[pos] != 0 {
-			pos++
+	count, _ := binutil.U32LE(data, 4)
+	names := make([]model.SearchName, 0, min(int(count), len(data)/2))
+	for pos := recordsStart; pos+2 <= len(data) && len(names) < int(count); {
+		recLen, _ := binutil.U16LE(data, pos)
+		if recLen < 2 || pos+int(recLen) > len(data) {
+			break
 		}
-		if pos > start {
-			name := string(data[start:pos])
-			// Filter: only include entries that look like names (printable characters)
-			printable := true
-			for _, c := range name {
-				if c < 0x20 || c > 0x7E {
-					// Allow common UTF-8 chars
-					if c < 0x80 {
-						printable = false
-						break
-					}
-				}
-			}
-			if printable && len(name) > 0 {
-				names = append(names, model.SearchName{Name: name})
-			}
+		if name := string(data[pos+2 : pos+int(recLen)]); name != "" {
+			names = append(names, model.SearchName{Name: name})
 		}
-		pos++ // skip null terminator
+		pos += int(recLen)
 	}
 
 	return names, nil
