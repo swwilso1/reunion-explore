@@ -1,9 +1,15 @@
 package familydata
 
 import (
+	"bytes"
+	"encoding/binary"
+
 	"github.com/kedoco/reunion-explore/internal/binutil"
 	"github.com/kedoco/reunion-explore/model"
 )
+
+// recordTypeDevice is the header record holding the device strings.
+const recordTypeDevice RecordType = 0x2010
 
 // ParseHeader extracts the familydata file header.
 // The header starts with the 8-byte magic "3SDUAU~R", followed by metadata,
@@ -15,6 +21,15 @@ func ParseHeader(data []byte) (*model.Header, error) {
 
 	h := &model.Header{
 		Magic: string(data[0:8]),
+	}
+
+	// The device strings live in the first record, which is a 0x2010
+	// record in Reunion 13/14. Reunion 10 starts directly with other
+	// records, so there are none to read.
+	if idx := bytes.Index(data, Marker); idx >= 2 {
+		if RecordType(binary.LittleEndian.Uint16(data[idx-2:])&^recordTypeFlag) != recordTypeDevice {
+			return h, nil
+		}
 	}
 
 	// After the fixed header area, look for newline-terminated strings
