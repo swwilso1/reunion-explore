@@ -9,9 +9,11 @@ import (
 )
 
 // ParseFmNames parses the fmnames.cache file (first/given names).
-// Format: size(4) + "2wps"(4) + count(4) = 12-byte header
+// Format: size(4) + magic(4) + count(4) = 12-byte header. The magic is
+// "2wps" in Reunion 14 and "dwps" in Reunion 13.
 // Then: offset table of count * uint32
-// Each record at offset: size(1) + meta(5) + phonetic(2) + name_string
+// Each record at offset: size(1) + meta(5) + phonetic(2) + name_string,
+// where size is the total record length including the size byte itself.
 func ParseFmNames(path string) ([]model.FirstNameEntry, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -22,8 +24,6 @@ func ParseFmNames(path string) ([]model.FirstNameEntry, error) {
 		return nil, fmt.Errorf("fmnames.cache too short: %d bytes", len(data))
 	}
 
-	// Magic is "2wps" (4 bytes), count as u32 at offset 8 includes the 'a' byte
-	// which is actually 0x61 = first byte of count 353 (0x00000161 LE)
 	count, _ := binutil.U32LE(data, 8)
 
 	// Offset table starts at byte 12
@@ -39,13 +39,13 @@ func ParseFmNames(path string) ([]model.FirstNameEntry, error) {
 			continue
 		}
 		recSize := int(data[o])
-		if o+1+recSize > len(data) || recSize < 8 {
+		if o+recSize > len(data) || recSize < 8 {
 			continue
 		}
 		meta := make([]byte, 5)
 		copy(meta, data[o+1:o+6])
 		phonetic := string(data[o+6 : o+8])
-		name := string(data[o+8 : o+1+recSize])
+		name := string(data[o+8 : o+recSize])
 
 		entries = append(entries, model.FirstNameEntry{
 			Name:     name,

@@ -69,6 +69,11 @@ func TestOpen(t *testing.T) {
 		}
 	}
 
+	// First names cache
+	if got := firstNames(ff); strings.Join(got, ",") != "Bouvier,Patrick" {
+		t.Errorf("FirstNames = %q, want [Bouvier Patrick]", got)
+	}
+
 	// Spot-check: ID 4 = John Fitzgerald Kennedy, Male
 	var jfk *model.Person
 	for i := range ff.Persons {
@@ -207,6 +212,19 @@ func TestOpenV13(t *testing.T) {
 		t.Errorf("JFK name = %q %q, want %q %q", jfk.GivenName, jfk.Surname, "John Fitzgerald", "KENNEDY")
 	}
 
+	names := firstNames(ff)
+	if len(names) != 59 {
+		t.Errorf("FirstNames count = %d, want 59", len(names))
+	}
+	if len(names) > 0 && names[0] != "Alois" {
+		t.Errorf("FirstNames[0] = %q, want %q", names[0], "Alois")
+	}
+	for _, n := range names {
+		if strings.IndexFunc(n, func(r rune) bool { return r < 0x20 }) >= 0 {
+			t.Errorf("first name contains control char: %q", n)
+		}
+	}
+
 	// Plain-text notes (no markup) must not pick up the "talf" marker.
 	const want = "After her husband died, she opened a “Notions Shop” to provide for her family."
 	var found bool
@@ -221,6 +239,14 @@ func TestOpenV13(t *testing.T) {
 	if !found {
 		t.Errorf("plain-text note %q not found", want)
 	}
+}
+
+func firstNames(ff *model.FamilyFile) []string {
+	names := make([]string, len(ff.FirstNames))
+	for i, fn := range ff.FirstNames {
+		names[i] = fn.Name
+	}
+	return names
 }
 
 func TestOpen_NotABundle(t *testing.T) {
