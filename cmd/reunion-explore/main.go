@@ -9,7 +9,7 @@ import (
 
 	reunion "github.com/kedoco/reunion-explore"
 	"github.com/kedoco/reunion-explore/model"
-	_ "github.com/kedoco/reunion-explore/parser" // register v14 parser
+	_ "github.com/kedoco/reunion-explore/parser" // register v13/v14 parsers
 )
 
 var version = "dev"
@@ -27,8 +27,8 @@ func main() {
 
 var rootCmd = &cobra.Command{
 	Use:     "reunion-explore <command> <bundle>",
-	Short:   "Explore Reunion 14 family files",
-	Long:    fmt.Sprintf("reunion-explore %s\nA CLI for parsing and exploring Reunion 14 genealogy bundles (.familyfile14).", version),
+	Short:   "Explore Reunion 13/14 family files",
+	Long:    fmt.Sprintf("reunion-explore %s\nA CLI for parsing and exploring Reunion 13/14 genealogy bundles (.familyfile13, .familyfile14).", version),
 	Version: version,
 }
 

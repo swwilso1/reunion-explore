@@ -9,6 +9,9 @@ import (
 	"github.com/kedoco/reunion-explore/model"
 )
 
+// placeholderID marks template records that are not real entries.
+const placeholderID = 0xFFFFFFFF
+
 // Result holds all data extracted from the familydata file.
 type Result struct {
 	Header           *model.Header
@@ -47,6 +50,11 @@ func Parse(path string, ec *reunion.ErrorCollector) (*Result, error) {
 
 	// Process each record type
 	for _, rec := range records {
+		// Reunion 13 stores a placeholder record with ID 0xFFFFFFFF for
+		// each record type; it holds no user data.
+		if rec.ID == placeholderID {
+			continue
+		}
 		switch rec.Type {
 		case RecordTypePerson:
 			person, err := ParsePerson(rec, ec)

@@ -28,10 +28,20 @@ func ParseNote(rec RawRecord, ec *reunion.ErrorCollector) (*model.Note, error) {
 	return n, nil
 }
 
+// noteTextMarker precedes the note text: "talf" + u32 + u32, then the text.
+var noteTextMarker = []byte("talf")
+
 // openTagBytes is the UTF-8 encoding of « (U+00AB).
 var openTagBytes = []byte{0xC2, 0xAB}
 
 func extractNoteText(data []byte) string {
+	// Skip past the "talf" marker and its 8-byte trailer when present.
+	// Reunion 13 stores a nonzero value after the marker, which would
+	// otherwise be mistaken for the start of the text.
+	if idx := bytes.Index(data[:min(len(data), 32)], noteTextMarker); idx >= 0 && idx+12 <= len(data) {
+		data = data[idx+12:]
+	}
+
 	// Inline notes have a binary preamble followed by text content.
 	// The text typically starts with «ff=1» markup.
 	// Look for the first occurrence of the « character (0xC2 0xAB).

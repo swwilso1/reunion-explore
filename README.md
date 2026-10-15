@@ -1,6 +1,6 @@
 # reunion-explore
 
-A CLI and web server for parsing and exploring [Reunion 14](https://www.leisterpro.com) genealogy bundles (`.familyfile14`).
+A CLI and web server for parsing and exploring [Reunion 14](https://www.leisterpro.com) genealogy bundles (`.familyfile14`). Reunion 13 bundles (`.familyfile13`) are also supported.
 
 ## Install
 
@@ -67,6 +67,10 @@ Release tags follow plain semver (`vX.Y.Z`). The supported Reunion format versio
 Reunion 14 uses a proprietary, undocumented binary format. Leister Productions has never published a specification — a developer [noted on ReunionTalk](https://www.reuniontalk.com/forum/using-older-versions-of-reunion/9509-conflicted-file-from-dropbox) that *"viewing the contents of a Family File package was not something we intended users to do."* Everything below was reverse-engineered from the Reunion 14 demo's sample file and confirmed against the parser in this repo.
 
 A sample file ships with the Reunion 14 demo at `~/Documents/Reunion Files/Sample Family 14.familyfile14`.
+
+### Reunion 13
+
+Reunion 13 bundles use the same layout and record format as Reunion 14; the familydata header carries format version `0x0d` instead of `0x0e` at offset 0x0C. The one structural difference handled by the parser is that Reunion 13 stores a placeholder record with ID `0xFFFFFFFF` for each record type, which is skipped. A Reunion 13 sample is included at `testdata/Sample Family 13.familyfile13`.
 
 The only known external reference is the [Archive Team wiki page on Reunion](http://fileformats.archiveteam.org/wiki/Reunion), which lists magic bytes and version history but no detailed specification. No other parsers, libraries, or format documentation exist — this project is the only known implementation.
 

@@ -46,7 +46,7 @@ func buildOpenAPISpec() map[string]any {
 		"openapi": "3.1.0",
 		"info": map[string]any{
 			"title":       "Reunion Explorer API",
-			"description": "REST API for browsing Reunion 14 family file data",
+			"description": "REST API for browsing Reunion 13/14 family file data",
 			"version":     "1.0.0",
 		},
 		"paths": buildPaths(),

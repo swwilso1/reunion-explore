@@ -2,11 +2,12 @@ package reunion_test
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	reunion "github.com/kedoco/reunion-explore"
 	"github.com/kedoco/reunion-explore/model"
-	_ "github.com/kedoco/reunion-explore/parser" // register v14 parser
+	_ "github.com/kedoco/reunion-explore/parser" // register v13/v14 parsers
 )
 
 func TestOpen(t *testing.T) {
@@ -147,6 +148,78 @@ func TestOpen(t *testing.T) {
 	}
 	if len(compactData) >= len(jsonData) {
 		t.Errorf("Compact JSON (%d bytes) should be smaller than indented (%d bytes)", len(compactData), len(jsonData))
+	}
+}
+
+func TestOpenV13(t *testing.T) {
+	ff, err := reunion.Open("testdata/Sample Family 13.familyfile13", nil)
+	if err != nil {
+		t.Fatalf("Open() error: %v", err)
+	}
+
+	if ff.Version != 13 {
+		t.Errorf("Version = %d, want 13", ff.Version)
+	}
+	if ff.Signature != "250208" {
+		t.Errorf("Signature = %q, want %q", ff.Signature, "250208")
+	}
+	if len(ff.Warnings) != 0 {
+		t.Errorf("Warnings = %v, want none", ff.Warnings)
+	}
+
+	// Same sample data as the v14 file; placeholder records must be excluded.
+	counts := []struct {
+		name string
+		got  int
+		want int
+	}{
+		{"Persons", len(ff.Persons), 49},
+		{"Families", len(ff.Families), 35},
+		{"Places", len(ff.Places), 52},
+		{"EventDefinitions", len(ff.EventDefinitions), 147},
+		{"Sources", len(ff.Sources), 25},
+		{"Notes", len(ff.Notes), 28},
+		{"MediaRefs", len(ff.MediaRefs), 35},
+	}
+	for _, c := range counts {
+		if c.got != c.want {
+			t.Errorf("%s = %d, want %d", c.name, c.got, c.want)
+		}
+	}
+
+	for i, p := range ff.Persons {
+		if p.GivenName == "" && p.Surname == "" {
+			t.Errorf("Person[%d] (ID %d) has no name", i, p.ID)
+		}
+	}
+
+	var jfk *model.Person
+	for i := range ff.Persons {
+		if ff.Persons[i].ID == 4 {
+			jfk = &ff.Persons[i]
+			break
+		}
+	}
+	if jfk == nil {
+		t.Fatal("Person with ID 4 not found")
+	}
+	if jfk.GivenName != "John Fitzgerald" || jfk.Surname != "KENNEDY" {
+		t.Errorf("JFK name = %q %q, want %q %q", jfk.GivenName, jfk.Surname, "John Fitzgerald", "KENNEDY")
+	}
+
+	// Plain-text notes (no markup) must not pick up the "talf" marker.
+	const want = "After her husband died, she opened a “Notions Shop” to provide for her family."
+	var found bool
+	for _, n := range ff.Notes {
+		if n.RawText == want {
+			found = true
+		}
+		if strings.Contains(n.RawText, "talf") {
+			t.Errorf("Note %d text contains marker: %q", n.ID, n.RawText)
+		}
+	}
+	if !found {
+		t.Errorf("plain-text note %q not found", want)
 	}
 }
 

@@ -1,6 +1,6 @@
 // Package reunion provides a Go API for parsing Reunion genealogy family files.
 //
-// Use Open() to parse a .familyfile14 bundle directory into a structured
+// Use Open() to parse a .familyfile13 or .familyfile14 bundle directory into a structured
 // FamilyFile model that can be serialized to JSON.
 package reunion
 

@@ -1,4 +1,4 @@
-// Package parser provides the version-14 parser implementation and orchestrator.
+// Package parser provides the Reunion 13/14 parser implementation and orchestrator.
 package parser
 
 import (
@@ -15,15 +15,19 @@ import (
 )
 
 func init() {
-	reunion.RegisterVersion(&V14Parser{})
+	reunion.RegisterVersion(&Parser{version: reunion.Version13})
+	reunion.RegisterVersion(&Parser{version: reunion.Version14})
 }
 
-// V14Parser implements VersionParser for Reunion 14.
-type V14Parser struct{}
+// Parser implements VersionParser for Reunion 13 and 14, which share the
+// same bundle layout and familydata record format.
+type Parser struct {
+	version reunion.Version
+}
 
-func (p *V14Parser) Version() reunion.Version { return reunion.Version14 }
+func (p *Parser) Version() reunion.Version { return p.version }
 
-func (p *V14Parser) CanParse(bundlePath string) (bool, error) {
+func (p *Parser) CanParse(bundlePath string) (bool, error) {
 	b, err := bundle.OpenBundle(bundlePath)
 	if err != nil {
 		return false, err
@@ -31,7 +35,7 @@ func (p *V14Parser) CanParse(bundlePath string) (bool, error) {
 	return b.FamilyData != "" && b.Signature != "", nil
 }
 
-func (p *V14Parser) Parse(bundlePath string, opts reunion.ParseOptions) (*model.FamilyFile, error) {
+func (p *Parser) Parse(bundlePath string, opts reunion.ParseOptions) (*model.FamilyFile, error) {
 	b, err := bundle.OpenBundle(bundlePath)
 	if err != nil {
 		return nil, fmt.Errorf("opening bundle: %w", err)
@@ -39,7 +43,7 @@ func (p *V14Parser) Parse(bundlePath string, opts reunion.ParseOptions) (*model.
 
 	ec := reunion.NewErrorCollector(opts.MaxErrors)
 	ff := &model.FamilyFile{
-		Version: 14,
+		Version: int(p.version),
 	}
 
 	// Parse signature
