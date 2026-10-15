@@ -17,6 +17,7 @@ var gedcomCmd = &cobra.Command{
 	PreRunE: loadBundleFromArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		outPath, _ := cmd.Flags().GetString("output")
+		noPictures, _ := cmd.Flags().GetBool("no-pictures")
 
 		var w io.Writer = os.Stdout
 		if outPath != "" && outPath != "-" {
@@ -28,11 +29,11 @@ var gedcomCmd = &cobra.Command{
 			w = f
 		}
 
-		if err := gedcom.Write(w, ff, gedcom.Options{ProgramVersion: version}); err != nil {
+		if err := gedcom.Write(w, ff, gedcom.Options{ProgramVersion: version, NoPictures: noPictures}); err != nil {
 			return fmt.Errorf("writing GEDCOM: %w", err)
 		}
 		if outPath != "" && outPath != "-" {
-			fmt.Fprintf(os.Stderr, "Wrote %d persons and %d families to %s\n", len(ff.Persons), len(ff.Families), outPath)
+			fmt.Fprintf(os.Stderr, "Wrote %d persons to %s\n", len(ff.Persons), outPath)
 		}
 		return nil
 	},
@@ -40,5 +41,6 @@ var gedcomCmd = &cobra.Command{
 
 func init() {
 	gedcomCmd.Flags().StringP("output", "o", "", "Output file (default stdout)")
+	gedcomCmd.Flags().Bool("no-pictures", false, "Omit picture links")
 	rootCmd.AddCommand(gedcomCmd)
 }

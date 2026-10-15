@@ -86,6 +86,23 @@ func TestWrite_SampleFamily14(t *testing.T) {
 	}
 }
 
+func TestWrite_NoPictures(t *testing.T) {
+	ff, err := reunion.Open("../testdata/Sample Family 14.familyfile14", nil)
+	if err != nil {
+		t.Fatalf("Open() error: %v", err)
+	}
+	var b strings.Builder
+	if err := gedcom.Write(&b, ff, gedcom.Options{NoPictures: true}); err != nil {
+		t.Fatalf("Write() error: %v", err)
+	}
+	if strings.Contains(b.String(), "OBJE") {
+		t.Error("output contains OBJE with NoPictures set")
+	}
+	if !strings.Contains(b.String(), "1 MARR\n2 DATE 12 SEP 1953\n") {
+		t.Error("output missing other data with NoPictures set")
+	}
+}
+
 // blockOf returns the record starting with header, up to the next record.
 func blockOf(out, header string) string {
 	i := strings.Index(out, header+"\n")

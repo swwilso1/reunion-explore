@@ -34,7 +34,7 @@ All commands accept a `-j` / `--json` flag for JSON output.
 | `summary <bundle> <id>` | Per-person stats (spouses, ancestors, surnames) |
 | `places <bundle>` | List all places |
 | `events <bundle>` | List all event type definitions |
-| `gedcom <bundle>` | Export as GEDCOM 5.5.1 (`-o` for an output file, default stdout) |
+| `gedcom <bundle>` | Export as GEDCOM 5.5.1 (`-o` for an output file, default stdout; `--no-pictures` to omit picture links) |
 | `serve <bundle>` | Start web server (`-a` for listen address, default `:8080`) |
 
 ### Examples

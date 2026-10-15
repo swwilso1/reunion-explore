@@ -18,6 +18,9 @@ import (
 type Options struct {
 	// ProgramVersion is written as the HEAD.SOUR.VERS value.
 	ProgramVersion string
+	// NoPictures omits picture links (OBJE), e.g. when the image files
+	// are no longer present.
+	NoPictures bool
 }
 
 // maxLineValue is the longest value written on one line before the rest
@@ -319,6 +322,9 @@ func (e *exporter) citations(level int, cites []model.SourceCitation) {
 }
 
 func (e *exporter) pictures(pics []model.Picture) {
+	if e.opts.NoPictures {
+		return
+	}
 	for _, pic := range pics {
 		if pic.Path == "" {
 			continue
