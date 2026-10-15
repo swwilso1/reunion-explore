@@ -233,6 +233,18 @@
           </template>
         </div>
 
+        <!-- Pictures -->
+        <div class="card" x-show="personDetail?.pictures?.length > 0">
+          <h3>Pictures</h3>
+          <table>
+            <tbody>
+              <template x-for="pic in personDetail?.pictures || []" :key="pic.slot">
+                <tr><th x-text="pic.caption || ('Picture ' + pic.slot)"></th><td x-text="pic.path"></td></tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
         <!-- Spouses -->
         <div class="card" x-show="personDetail?.spouses?.length > 0">
           <h3>Spouses</h3>

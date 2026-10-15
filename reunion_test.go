@@ -123,6 +123,32 @@ func TestOpen(t *testing.T) {
 		t.Errorf("JFK birth citation sourceID = %d, want 6", birthEvt.SourceCitations[0].SourceID)
 	}
 
+	// Pictures: plain file name (person 4) and macOS bookmark (person 1)
+	wantPics := map[uint32]model.Picture{
+		4: {Slot: 3, Caption: "jfk 1947", Path: "jfk 1947.jpg"},
+		1: {Slot: 1, Caption: "kennedy, joseph p banker", Path: "/Users/kevin/Pictures/Reunion Pictures/Sample Pictures/kennedy, joseph p banker.jpg"},
+	}
+	for _, p := range ff.Persons {
+		want, ok := wantPics[p.ID]
+		if !ok {
+			continue
+		}
+		found := false
+		for _, pic := range p.Pictures {
+			if pic == want {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("Person %d pictures = %+v, want to include %+v", p.ID, p.Pictures, want)
+		}
+		for _, evt := range p.Events {
+			if evt.Tag >= 600 && evt.Tag < 700 {
+				t.Errorf("Person %d has picture tag 0x%04X as an event", p.ID, evt.Tag)
+			}
+		}
+	}
+
 	// Source fields are labeled from their schema definitions
 	var gotFields []string
 	for _, src := range ff.Sources {

@@ -49,6 +49,7 @@ type PersonDetail struct {
 	SourceCitations []SourceCitationDisplay  `json:"source_citations,omitempty"`
 	ResolvedEvents  []ResolvedEvent         `json:"resolved_events,omitempty"`
 	Notes           []NoteDisplay           `json:"notes,omitempty"`
+	Pictures        []model.Picture         `json:"pictures,omitempty"`
 	Spouses         []PersonRef             `json:"spouses,omitempty"`
 	Children        []PersonRef             `json:"children,omitempty"`
 	Parents         []PersonRef             `json:"parents,omitempty"`
@@ -394,6 +395,7 @@ func (s *Server) handlePerson(w http.ResponseWriter, r *http.Request) {
 		SourceCitations: s.resolveSourceCitations(p.SourceCitations),
 		ResolvedEvents:  s.resolveEvents(p.Events),
 		Notes:           notes,
+		Pictures:        p.Pictures,
 		Spouses:         s.personRefs(s.load().idx.Spouses(p.ID)),
 		Children:        s.personRefs(s.load().idx.ChildrenOf(p.ID)),
 		Parents:         s.personRefs(s.load().idx.Parents(p.ID)),

@@ -31,9 +31,17 @@ type Person struct {
 	UserID          string           `json:"user_id,omitempty"`
 	Sex             Sex              `json:"sex"`
 	Events          []PersonEvent    `json:"events,omitempty"`
+	Pictures        []Picture        `json:"pictures,omitempty"`
 	NoteRefs        []NoteRef        `json:"note_refs,omitempty"`
 	SourceCitations []SourceCitation `json:"source_citations,omitempty"`
 	RawFields       []RawField       `json:"raw_fields,omitempty"`
+}
+
+// Picture links a person to an image file.
+type Picture struct {
+	Slot    int    `json:"slot"` // 1-based picture slot
+	Caption string `json:"caption,omitempty"`
+	Path    string `json:"path,omitempty"` // file name or path as stored by Reunion
 }
 
 // PersonEvent represents an event associated with a person (birth, death, etc.).

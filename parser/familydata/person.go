@@ -59,6 +59,12 @@ func ParsePerson(rec RawRecord, ec *reunion.ErrorCollector) (*model.Person, erro
 				p.SourceCitations = append(p.SourceCitations, cites...)
 			}
 		default:
+			if isPictureTag(f.Tag) {
+				if pic, ok := ParsePicture(f.Tag, f.Data); ok {
+					p.Pictures = append(p.Pictures, pic)
+					continue
+				}
+			}
 			if isEventTag(f.Tag) {
 				evt := model.PersonEvent{
 					Tag:             f.Tag,

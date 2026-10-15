@@ -150,6 +150,13 @@ func cmdPerson(ff *model.FamilyFile, idx *Index, id uint32, asJSON bool) error {
 		}
 	}
 
+	if len(p.Pictures) > 0 {
+		fmt.Println("\nPictures:")
+		for _, pic := range p.Pictures {
+			fmt.Printf("  - %s: %s\n", pic.Caption, pic.Path)
+		}
+	}
+
 	spouses := idx.Spouses(p.ID)
 	if len(spouses) > 0 {
 		fmt.Println("\nSpouses:")
