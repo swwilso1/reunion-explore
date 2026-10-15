@@ -81,6 +81,9 @@ func TestWrite_SampleFamily14(t *testing.T) {
 			t.Errorf("output missing %q", want)
 		}
 	}
+	if strings.Contains(blockOf(out, "0 @S6@ SOUR"), "RIN") {
+		t.Error("source records must not carry RIN (rejected by MacFamilyTree)")
+	}
 	if n := strings.Count(blockOf(out, "0 @F1@ FAM"), "1 CHIL "); n != 9 {
 		t.Errorf("family 1 has %d CHIL lines, want 9", n)
 	}

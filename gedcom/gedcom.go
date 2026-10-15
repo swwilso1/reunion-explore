@@ -38,7 +38,9 @@ const (
 var (
 	indiEvents = tagSet("BIRT CHR DEAT BURI CREM ADOP BAPM BARM BASM BLES CHRA CONF FCOM ORDN NATU EMIG IMMI CENS PROB WILL GRAD RETI EVEN BAPL CONL ENDL SLGC")
 	indiAttrs  = tagSet("CAST DSCR EDUC IDNO NATI NCHI NMR OCCU PROP RELI RESI SSN TITL FACT")
-	famEvents  = tagSet("ANUL CENS DIV DIVF ENGA MARB MARC MARR MARL MARS RESI EVEN SLGS")
+	// RESI is valid on families in 5.5.1, but MacFamilyTree rejects it there,
+	// so family residences are written as EVEN with a TYPE.
+	famEvents = tagSet("ANUL CENS DIV DIVF ENGA MARB MARC MARR MARL MARS EVEN SLGS")
 )
 
 func tagSet(s string) map[string]bool {
@@ -283,10 +285,10 @@ func (e *exporter) event(schemaID uint16, isFact bool, date string, placeRefs []
 	value, memo := "", text
 	switch {
 	case attrs[code] && code != "RESI":
-		value, memo = text, ""
+		value, memo = singleLine(text), ""
 	case events[code]:
 	case isFact:
-		code, value, memo = "FACT", text, ""
+		code, value, memo = "FACT", singleLine(text), ""
 	default:
 		code = "EVEN"
 	}
@@ -378,11 +380,22 @@ func (e *exporter) source(s *model.Source) {
 	if len(other) > 0 {
 		e.text(1, "NOTE", strings.Join(other, "\n"))
 	}
-	e.line(1, "", "RIN", fmt.Sprint(s.ID))
 }
 
 func (e *exporter) note(n *model.Note) {
 	e.textX(0, xref("N", n.ID), "NOTE", noteText(n))
+}
+
+// singleLine joins a multi-line attribute value with "; ". Attribute
+// values with CONT lines are rejected by some readers (MacFamilyTree).
+func singleLine(s string) string {
+	var parts []string
+	for _, l := range strings.Split(s, "\n") {
+		if l = strings.TrimSpace(l); l != "" {
+			parts = append(parts, l)
+		}
+	}
+	return strings.Join(parts, "; ")
 }
 
 func noteText(n *model.Note) string {

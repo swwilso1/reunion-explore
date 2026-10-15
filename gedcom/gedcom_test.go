@@ -37,6 +37,18 @@ func TestSplitChunks(t *testing.T) {
 	}
 }
 
+func TestSingleLine(t *testing.T) {
+	if got := singleLine("6'4\"\n250 lbs\n"); got != "6'4\"; 250 lbs" {
+		t.Errorf("singleLine() = %q", got)
+	}
+}
+
+func TestFamilyResidenceIsEven(t *testing.T) {
+	if famEvents["RESI"] {
+		t.Error("RESI must not be written on families (rejected by MacFamilyTree)")
+	}
+}
+
 func TestText_ContAndEscaping(t *testing.T) {
 	var b strings.Builder
 	e := newExporter(&b, nil, Options{})
