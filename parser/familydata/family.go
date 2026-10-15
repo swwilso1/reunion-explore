@@ -14,10 +14,16 @@ const (
 	TagMarriage uint16 = 0x005F
 )
 
-// isChildTag returns true if the tag is a child reference (0xFA-0xFF).
+// isChildTag returns true if the tag is a child reference. Children are
+// numbered from 0xFA in birth order and continue past 0xFF (0x100, 0x101,
+// ...) in families with more than six children, up to the note tags.
 func isChildTag(tag uint16) bool {
-	return tag >= 0x00FA && tag <= 0x00FF
+	return tag >= 0x00FA && tag < 0x0190
 }
+
+// marriageSubFieldsOffset is where sub-TLVs start in a marriage field. Its
+// header is u32 + u32 + u32 schema ID, shorter than a regular event's.
+const marriageSubFieldsOffset = 12
 
 // isFamilyEventTag returns true if the tag is a family event (>= 0x100).
 func isFamilyEventTag(tag uint16) bool {
@@ -54,6 +60,23 @@ func ParseFamily(rec RawRecord, ec *reunion.ErrorCollector) (*model.Family, erro
 			} else if len(field.Data) >= 2 {
 				id, _ := binutil.U16LE(field.Data, 0)
 				f.Partner2 = uint32(id)
+			}
+		case field.Tag == TagMarriage:
+			if len(field.Data) >= marriageSubFieldsOffset {
+				schemaID, _ := binutil.U32LE(field.Data, 8)
+				f.Events = append(f.Events, model.FamilyEvent{
+					Tag:             field.Tag,
+					SchemaID:        uint16(schemaID),
+					PlaceRefs:       ExtractPlaceRefs(field.Data),
+					RawData:         field.Data,
+					Date:            extractDateAt(field.Data, marriageSubFieldsOffset),
+					Text:            extractEventTextAt(field.Data, marriageSubFieldsOffset),
+					SourceCitations: extractEventSourceCitationsAt(field.Data, marriageSubFieldsOffset),
+				})
+			}
+		case isPictureTag(field.Tag):
+			if pic, ok := ParsePicture(field.Tag, field.Data); ok {
+				f.Pictures = append(f.Pictures, pic)
 			}
 		case isChildTag(field.Tag):
 			if len(field.Data) >= 4 {

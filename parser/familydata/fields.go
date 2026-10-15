@@ -131,19 +131,28 @@ func ExtractPlaceRefs(data []byte) []int {
 //	0x40 = "after"
 //	0xE0 = "after", year-only
 func ExtractDate(fieldData []byte) string {
-	if len(fieldData) < 26 {
+	return extractDateAt(fieldData, eventSubFieldsOffset)
+}
+
+// eventSubFieldsOffset is where sub-TLVs start in a person or family event.
+// Marriage fields use marriageSubFieldsOffset instead.
+const eventSubFieldsOffset = 18
+
+// extractDateAt decodes a date sub-TLV starting at off.
+func extractDateAt(fieldData []byte, off int) string {
+	if len(fieldData) < off+8 {
 		return ""
 	}
-	// Sub-TLV at offset 18: date sub-TLV has exactly length 8 (4-byte header + 4-byte date)
-	subLen, err := binutil.U16LE(fieldData, 18)
+	// Date sub-TLV has exactly length 8 (4-byte header + 4-byte date)
+	subLen, err := binutil.U16LE(fieldData, off)
 	if err != nil || subLen != 8 {
 		return ""
 	}
 
-	precFlags := fieldData[22]
-	dayByte := fieldData[23]
-	monthYearLo := fieldData[24]
-	monthYearHi := fieldData[25]
+	precFlags := fieldData[off+4]
+	dayByte := fieldData[off+5]
+	monthYearLo := fieldData[off+6]
+	monthYearHi := fieldData[off+7]
 
 	totalQ := int(monthYearHi)<<8 | int(monthYearLo)
 	year := totalQ/4 - 8000
@@ -276,7 +285,10 @@ func ExtractSourceCitations(data []byte) []model.SourceCitation {
 // ExtractEventSourceCitations walks the sub-TLVs at offset 18 in event data
 // and passes the last sub-TLV's data to ExtractSourceCitations.
 func ExtractEventSourceCitations(fieldData []byte) []model.SourceCitation {
-	pos := 18
+	return extractEventSourceCitationsAt(fieldData, eventSubFieldsOffset)
+}
+
+func extractEventSourceCitationsAt(fieldData []byte, pos int) []model.SourceCitation {
 	lastData := []byte(nil)
 	for pos+4 <= len(fieldData) {
 		subLen, err := binutil.U16LE(fieldData, pos)
@@ -299,7 +311,10 @@ func ExtractEventSourceCitations(fieldData []byte) []model.SourceCitation {
 // the first text sub-TLV (tag 0x0000, length > 8, contains printable text).
 // It strips [[pt:NNN]] place-ref markers from the result.
 func ExtractEventText(fieldData []byte) string {
-	pos := 18
+	return extractEventTextAt(fieldData, eventSubFieldsOffset)
+}
+
+func extractEventTextAt(fieldData []byte, pos int) string {
 	for pos+4 <= len(fieldData) {
 		subLen, err := binutil.U16LE(fieldData, pos)
 		if err != nil || subLen < 4 {

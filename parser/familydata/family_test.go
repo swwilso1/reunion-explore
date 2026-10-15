@@ -33,9 +33,9 @@ func TestParseFamily(t *testing.T) {
 	binary.LittleEndian.PutUint32(childData2, childID2<<8)
 	recData = append(recData, makeTLVField(0x00FB, childData2)...)
 
-	// Family event (tag 0x0100, >= 0x100)
+	// Family event (tag 0x03E8)
 	eventData := make([]byte, 20)
-	recData = append(recData, makeTLVField(0x0100, eventData)...)
+	recData = append(recData, makeTLVField(0x03E8, eventData)...)
 
 	rec := RawRecord{
 		Type:   RecordTypeFamily,
@@ -73,6 +73,29 @@ func TestParseFamily(t *testing.T) {
 	}
 	if len(family.Events) != 1 {
 		t.Errorf("Events count = %d, want 1", len(family.Events))
+	}
+}
+
+func TestParseFamily_Marriage(t *testing.T) {
+	// Marriage field: u32 + u32 + u32 schema ID, then sub-TLVs at offset 12.
+	data := []byte{
+		0x21, 0x00, 0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00,
+		0x08, 0x00, 0x00, 0x00, 0x00, 0x4c, 0x86, 0x9b, // date: 12 Sep 1953
+	}
+	data = append(data, 0x0d, 0x00, 0x00, 0x00)
+	data = append(data, "[[pt:58]]"...)
+	recData := append(make([]byte, 6), makeTLVField(TagMarriage, data)...)
+
+	family, err := ParseFamily(RawRecord{Type: RecordTypeFamily, ID: 8, Data: recData}, reunion.NewErrorCollector(0))
+	if err != nil {
+		t.Fatalf("ParseFamily() error = %v", err)
+	}
+	if len(family.Events) != 1 {
+		t.Fatalf("Events count = %d, want 1", len(family.Events))
+	}
+	evt := family.Events[0]
+	if evt.SchemaID != 14 || evt.Date != "12 Sep 1953" || len(evt.PlaceRefs) != 1 || evt.PlaceRefs[0] != 58 {
+		t.Errorf("marriage = %+v, want schema 14, 12 Sep 1953, place 58", evt)
 	}
 }
 
@@ -120,7 +143,11 @@ func TestIsChildTag(t *testing.T) {
 	if isChildTag(0x00F9) {
 		t.Error("isChildTag(0x00F9) should be false")
 	}
-	if isChildTag(0x0100) {
-		t.Error("isChildTag(0x0100) should be false")
+	// Families with more than six children continue past 0xFF.
+	if !isChildTag(0x0100) || !isChildTag(0x0107) {
+		t.Error("isChildTag(0x0100..0x0107) should be true")
+	}
+	if isChildTag(0x0190) {
+		t.Error("isChildTag(0x0190) should be false (note tag)")
 	}
 }

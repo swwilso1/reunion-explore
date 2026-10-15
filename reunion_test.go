@@ -157,6 +157,29 @@ func TestOpen(t *testing.T) {
 		}
 	}
 
+	// Marriages (tag 0x5F) and families with more than six children
+	for _, f := range ff.Families {
+		var marr *model.FamilyEvent
+		for i := range f.Events {
+			if f.Events[i].Tag == 0x5F {
+				marr = &f.Events[i]
+			}
+		}
+		switch f.ID {
+		case 1: // Joseph P. Kennedy + Rose Fitzgerald
+			if marr == nil || marr.Date != "7 Oct 1914" || marr.SchemaID != 14 {
+				t.Errorf("Family 1 marriage = %+v, want 7 Oct 1914 (schema 14)", marr)
+			}
+			if len(f.Children) != 9 {
+				t.Errorf("Family 1 children = %d, want 9", len(f.Children))
+			}
+		case 8: // JFK + Jacqueline Bouvier
+			if marr == nil || marr.Date != "12 Sep 1953" || len(marr.PlaceRefs) != 1 {
+				t.Errorf("Family 8 marriage = %+v, want 12 Sep 1953 with a place", marr)
+			}
+		}
+	}
+
 	// Child-status definitions carry a color, not an abbreviation
 	for _, d := range ff.EventDefinitions {
 		if d.DisplayName == "Foster" && (d.Color != "#FFFF00FF" || d.Abbreviation != "") {
