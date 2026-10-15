@@ -9,6 +9,7 @@ type Family struct {
 	Children  []uint32      `json:"children,omitempty"`
 	Events    []FamilyEvent `json:"events,omitempty"`
 	Pictures  []Picture     `json:"pictures,omitempty"`
+	NoteRefs  []NoteRef     `json:"note_refs,omitempty"`
 	RawFields []RawField    `json:"raw_fields,omitempty"`
 }
 

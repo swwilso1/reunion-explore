@@ -98,6 +98,17 @@ func ParseFamily(rec RawRecord, ec *reunion.ErrorCollector) (*model.Family, erro
 				SourceCitations: ExtractEventSourceCitations(field.Data),
 			}
 			f.Events = append(f.Events, evt)
+
+			// Note-type events (tag < 0x03E8) reference a note record
+			if field.Tag < 0x03E8 {
+				if noteID := ExtractNoteRef(field.Data); noteID > 0 {
+					f.NoteRefs = append(f.NoteRefs, model.NoteRef{
+						NoteID:   noteID,
+						EventTag: field.Tag,
+						SchemaID: evt.SchemaID,
+					})
+				}
+			}
 		default:
 			f.RawFields = append(f.RawFields, model.RawField{
 				Tag:  field.Tag,
